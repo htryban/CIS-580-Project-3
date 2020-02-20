@@ -51,9 +51,6 @@ namespace PlatformerExample
         /// <param name="spriteBatch">The spriteBatch to render to</param>
         public void Draw(SpriteBatch spriteBatch)
         {
-#if VISUAL_DEBUG
-            VisualDebugging.DrawRectangle(spriteBatch, bounds, Color.Green);
-#endif
             for (int i = 0; i < tileCount; i++)
             {
                 sprite.Draw(spriteBatch, new Vector2(bounds.X + i * sprite.Width, bounds.Y), Color.White);

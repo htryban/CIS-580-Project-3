@@ -1,7 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace PlatformerExample
@@ -12,19 +14,25 @@ namespace PlatformerExample
     public class Game1 : Game
     {
 
-
+        Random rand = new Random();
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         SpriteSheet sheet;
         Player player;
         List<Platform> platforms;
+        List<Rocks> rocks;
         AxisList world;
+        AxisList rockWorld;
+        Rectangle keyRect = new Rectangle(1125, 570, 40, 40);
+        Sprite keySprite;
+        int score = 0;
 
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             platforms = new List<Platform>();
+            rocks = new List<Rocks>();
         }
 
         /// <summary>
@@ -36,6 +44,10 @@ namespace PlatformerExample
         protected override void Initialize()
         {
             // TODO: Add your initialization logic here
+            graphics.PreferredBackBufferWidth = 1200;
+            graphics.PreferredBackBufferHeight = 1000;
+            graphics.ApplyChanges();
+
 
             base.Initialize();
         }
@@ -46,9 +58,6 @@ namespace PlatformerExample
         /// </summary>
         protected override void LoadContent()
         {
-#if VISUAL_DEBUG
-            VisualDebugging.LoadContent(Content);
-#endif
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
@@ -61,16 +70,34 @@ namespace PlatformerExample
             player = new Player(playerFrames);
 
             // Create the platforms
-            platforms.Add(new Platform(new BoundingRectangle(80, 300, 105, 21), sheet[1]));
-            platforms.Add(new Platform(new BoundingRectangle(280, 400, 84, 21), sheet[2]));
-            platforms.Add(new Platform(new BoundingRectangle(160, 200, 42, 21), sheet[3]));
+            platforms.Add(new Platform(new BoundingRectangle(0, 979, 1250, 40), sheet[3]));
+            platforms.Add(new Platform(new BoundingRectangle(0, 860, 200, 40), sheet[3]));
+            platforms.Add(new Platform(new BoundingRectangle(0, 860, 200, 40), sheet[3]));
+            platforms.Add(new Platform(new BoundingRectangle(300, 760, 400, 40), sheet[3]));
+            platforms.Add(new Platform(new BoundingRectangle(900, 710, 200, 40), sheet[3]));
+            platforms.Add(new Platform(new BoundingRectangle(1100, 620, 100, 40), sheet[3]));
+
+            rocks.Add(new Rocks(new BoundingRectangle(rand.Next(900, 1150), -100, 40, 40), sheet[376]));
+            rocks.Add(new Rocks(new BoundingRectangle(rand.Next(650, 900), -100, 40, 40), sheet[376]));
+            rocks.Add(new Rocks(new BoundingRectangle(rand.Next(450, 600), -100, 40, 40), sheet[376]));
+            rocks.Add(new Rocks(new BoundingRectangle(rand.Next(250, 450), -100, 40, 40), sheet[376]));
+            rocks.Add(new Rocks(new BoundingRectangle(rand.Next(250), -100, 40, 40), sheet[376]));
+
 
             // Add the platforms to the axis list
             world = new AxisList();
+            rockWorld = new AxisList();
             foreach (Platform platform in platforms)
             {
                 world.AddGameObject(platform);
             }
+
+            foreach (Rocks rock in rocks)
+            {
+                rockWorld.AddGameObject(rock);
+            }
+
+            keySprite = sheet[14];
         }
 
         /// <summary>
@@ -95,10 +122,21 @@ namespace PlatformerExample
             // TODO: Add your update logic here
             player.Update(gameTime);
 
-            // Check for platform collisions
-            var platformQuery = world.QueryRange(player.Bounds.X, player.Bounds.X + player.Bounds.Width);
-            player.CheckForPlatformCollision(platformQuery);
+            //Debug.WriteLine($"Checking collisions against {rocks.Count()} rocks");
+            foreach (Rocks rock in rocks)
+            {
+                rock.fall(rand.Next(1160), rand.Next(-200, -50), (float)(1+rand.NextDouble()));
+            }
             
+
+            // Check for platform collisions
+            var platformQuery = world.QueryRange(player.Bounds.X-50, player.Bounds.X + player.Bounds.Width);
+            var rockQuery = rockWorld.QueryRange(0,1200);
+            player.CheckForPlatformCollision(platformQuery);
+            player.CheckForRockCollisions(rockQuery);
+
+            if (keyRect.Intersects(player.Bounds)) Exit();
+
             base.Update(gameTime);
         }
 
@@ -108,10 +146,12 @@ namespace PlatformerExample
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.Clear(Color.DarkSlateBlue);
 
             // TODO: Add your drawing code here
             spriteBatch.Begin();
+
+            keySprite.Draw(spriteBatch, keyRect, Color.Yellow);
 
             // Draw the platforms 
             platforms.ForEach(platform =>
@@ -119,16 +159,14 @@ namespace PlatformerExample
                 platform.Draw(spriteBatch);
             });
 
+            rocks.ForEach(rock =>
+            {
+                rock.Draw(spriteBatch);
+            });
+
             // Draw the player
             player.Draw(spriteBatch);
             
-            // Draw an arbitrary range of sprites
-            for(var i = 17; i < 30; i++)
-            {
-                sheet[i].Draw(spriteBatch, new Vector2(i*25, 25), Color.White);
-            }
-
-
             spriteBatch.End();
 
             base.Draw(gameTime);

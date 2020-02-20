@@ -40,10 +40,10 @@ namespace PlatformerExample
     public class Player
     {
         // The speed of the walking animation
-        const int FRAME_RATE = 300;
+        const int FRAME_RATE = 100;
 
         // The duration of a player's jump, in milliseconds
-        const int JUMP_TIME = 500;
+        const int JUMP_TIME = 600;
 
         // The player sprite frames
         Sprite[] frames;
@@ -55,7 +55,7 @@ namespace PlatformerExample
         PlayerAnimState animationState = PlayerAnimState.Idle;
 
         // The player's speed
-        int speed = 3;
+        int speed = 6;
 
         // The player's vertical movement state
         VerticalMovementState verticalState = VerticalMovementState.OnGround;
@@ -78,7 +78,7 @@ namespace PlatformerExample
         /// <summary>
         /// Gets and sets the position of the player on-screen
         /// </summary>
-        public Vector2 Position = new Vector2(200, 200);
+        public Vector2 Position = new Vector2(600, 900);
 
         public BoundingRectangle Bounds => new BoundingRectangle(Position - 1.8f * origin, 38, 41);
 
@@ -104,7 +104,7 @@ namespace PlatformerExample
             switch(verticalState)
             {
                 case VerticalMovementState.OnGround:
-                    if(keyboard.IsKeyDown(Keys.Space))
+                    if(keyboard.IsKeyDown(Keys.Space) || keyboard.IsKeyDown(Keys.Up))
                     {
                         verticalState = VerticalMovementState.Jumping;
                         jumpTimer = new TimeSpan(0);
@@ -113,16 +113,13 @@ namespace PlatformerExample
                 case VerticalMovementState.Jumping:
                     jumpTimer += gameTime.ElapsedGameTime;
                     // Simple jumping with platformer physics
-                    Position.Y -= (250 / (float)jumpTimer.TotalMilliseconds);
+                    Position.Y -= (400 / (float)jumpTimer.TotalMilliseconds);
                     if (jumpTimer.TotalMilliseconds >= JUMP_TIME) verticalState = VerticalMovementState.Falling;
                     break;
                 case VerticalMovementState.Falling:
                     Position.Y += speed;
                     // TODO: This needs to be replaced with collision logic
-                    if (Position.Y > 500)
-                    {
-                        Position.Y = 500;
-                    }
+                    
                     break;
             }
             
@@ -146,6 +143,10 @@ namespace PlatformerExample
             {
                 animationState = PlayerAnimState.Idle;
             }
+
+            //keep player on screen
+            if(Position.X < 15) Position.X = 15;
+            if(Position.X > 1185) Position.X = 1185;
 
             // Apply animations
             switch(animationState)
@@ -192,7 +193,7 @@ namespace PlatformerExample
 
         public void CheckForPlatformCollision(IEnumerable<IBoundable> platforms)
         {
-            Debug.WriteLine($"Checking collisions against {platforms.Count()} platforms");
+            //Debug.WriteLine($"Checking collisions against {platforms.Count()} platforms");
             if (verticalState != VerticalMovementState.Jumping)
             {
                 verticalState = VerticalMovementState.Falling;
@@ -203,6 +204,18 @@ namespace PlatformerExample
                         Position.Y = platform.Bounds.Y - 1;
                         verticalState = VerticalMovementState.OnGround;
                     }
+                }
+            }
+        }
+
+        public void CheckForRockCollisions(IEnumerable<IBoundable> rocks)
+        {
+            foreach (Rocks rock in rocks)
+            {
+                if (Bounds.CollidesWith(rock.Bounds))
+                {
+                    Position.X = 600;
+                    Position.Y = 950;
                 }
             }
         }

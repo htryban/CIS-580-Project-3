@@ -45,6 +45,7 @@ namespace PlatformerExample
             this.Height = height;
         }
 
+
         /// <summary>
         /// Constructs a new bounding rectangle.  This class is similar to a rectangle,
         /// but uses floats
