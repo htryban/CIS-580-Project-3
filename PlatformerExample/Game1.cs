@@ -25,7 +25,6 @@ namespace PlatformerExample
         AxisList rockWorld;
         Rectangle keyRect = new Rectangle(1125, 570, 40, 40);
         Sprite keySprite;
-        int score = 0;
 
         public Game1()
         {
@@ -77,12 +76,13 @@ namespace PlatformerExample
             platforms.Add(new Platform(new BoundingRectangle(900, 710, 200, 40), sheet[3]));
             platforms.Add(new Platform(new BoundingRectangle(1100, 620, 100, 40), sheet[3]));
 
+            // Create the meteors
             rocks.Add(new Rocks(new BoundingRectangle(rand.Next(900, 1150), -100, 40, 40), sheet[376]));
             rocks.Add(new Rocks(new BoundingRectangle(rand.Next(650, 900), -100, 40, 40), sheet[376]));
             rocks.Add(new Rocks(new BoundingRectangle(rand.Next(450, 600), -100, 40, 40), sheet[376]));
             rocks.Add(new Rocks(new BoundingRectangle(rand.Next(250, 450), -100, 40, 40), sheet[376]));
             rocks.Add(new Rocks(new BoundingRectangle(rand.Next(250), -100, 40, 40), sheet[376]));
-
+            rocks.Add(new Rocks(new BoundingRectangle(rand.Next(1150), -100, 40, 40), sheet[376]));
 
             // Add the platforms to the axis list
             world = new AxisList();
@@ -148,16 +148,19 @@ namespace PlatformerExample
         {
             GraphicsDevice.Clear(Color.DarkSlateBlue);
 
-            // TODO: Add your drawing code here
-            spriteBatch.Begin();
+            // Calculate and apply the world/view transform
+            var offset = new Vector2(200, 300) - player.Position;
+            var t = Matrix.CreateTranslation(offset.X, offset.Y, 0);
+            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, t);
 
             keySprite.Draw(spriteBatch, keyRect, Color.Yellow);
 
             // Draw the platforms 
-            platforms.ForEach(platform =>
+            var platformQuery = world.QueryRange(player.Position.X - 221, player.Position.X + 400);
+            foreach (Platform platform in platformQuery)
             {
                 platform.Draw(spriteBatch);
-            });
+            }
 
             rocks.ForEach(rock =>
             {

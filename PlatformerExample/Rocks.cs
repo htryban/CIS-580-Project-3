@@ -41,7 +41,7 @@ namespace PlatformerExample
 
         public void fall(int x, int y, float speed)
         {
-            if (bounds.Y < 1100) bounds.Y += 10 * speed;
+            if (bounds.Y < 1100) bounds.Y += 8 * speed;
             else
             {
                 bounds.Y = y;

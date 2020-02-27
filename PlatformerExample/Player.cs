@@ -13,7 +13,7 @@ namespace PlatformerExample
     /// <summary>
     /// An enumeration of possible player animation states
     /// </summary>
-    enum PlayerAnimState
+    public enum PlayerAnimState
     {
         Idle,
         JumpingLeft,
@@ -39,6 +39,17 @@ namespace PlatformerExample
     /// </summary>
     public class Player
     {
+        private PlayerState state_ = new PlayerState();
+        //Player player = new Player();
+        public virtual void takeInput(string input)
+        {
+            state_.takeInput(this, input);
+        }
+        public virtual void update()
+        {
+            state_.update(this);
+        }
+
         // The speed of the walking animation
         const int FRAME_RATE = 100;
 
@@ -92,6 +103,8 @@ namespace PlatformerExample
             animationState = PlayerAnimState.WalkingLeft;
         }
 
+        
+
         /// <summary>
         /// Updates the player, applying movement and physics
         /// </summary>
@@ -127,8 +140,9 @@ namespace PlatformerExample
             // Horizontal movement
             if (keyboard.IsKeyDown(Keys.Left))
             {
-                if (verticalState == VerticalMovementState.Jumping || verticalState == VerticalMovementState.Falling) 
+                if (verticalState == VerticalMovementState.Jumping || verticalState == VerticalMovementState.Falling)
                     animationState = PlayerAnimState.JumpingLeft;
+                    //takeInput("jumping left");
                 else animationState = PlayerAnimState.WalkingLeft;
                 Position.X -= speed;
             }
@@ -144,7 +158,7 @@ namespace PlatformerExample
                 animationState = PlayerAnimState.Idle;
             }
 
-            //keep player on screen
+            // Keep player on screen
             if(Position.X < 15) Position.X = 15;
             if(Position.X > 1185) Position.X = 1185;
 
@@ -189,6 +203,12 @@ namespace PlatformerExample
                     break;
 
             }
+        }
+
+        public void Anim(PlayerAnimState a, int frame)
+        {
+            animationState = a;
+            currentFrame = frame;
         }
 
         public void CheckForPlatformCollision(IEnumerable<IBoundable> platforms)
